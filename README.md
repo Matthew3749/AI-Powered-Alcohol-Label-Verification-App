@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TTB Label Verification Tool
 
-## Getting Started
+An AI-powered alcohol beverage label compliance tool for TTB (Alcohol and Tobacco Tax and Trade Bureau) agents. Upload a label image and enter the corresponding COLA application data — the tool verifies all required fields in under 5 seconds.
 
-First, run the development server:
+## Live Demo
 
+https://ai-powered-alcohol-label-verificati-nu.vercel.app
+
+## Features
+
+- **AI-powered extraction** — Claude vision model reads label text even from angled or imperfect photos
+- **Field-by-field verification** — checks brand name, class/type, ABV, net contents, bottler info, country of origin, and government warning
+- **Smart matching** — normalizes capitalization and punctuation for brand names (e.g. STONE'S THROW matches Stone's Throw)
+- **Strict government warning validation** — enforces exact TTB language and required ALL CAPS formatting
+- **Sub-5 second processing** — meets the hard performance requirement from agent feedback
+- **Clean, accessible UI** — designed for users of all tech comfort levels
+- **Batch upload tab** — foundation in place for multi-label processing
+
+## Tech Stack
+
+- **Next.js 14** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **Anthropic Claude API** (claude-sonnet for vision extraction)
+- **Vercel** (deployment)
+
+## Setup
+
+1. Clone the repo
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create a `.env.local` file in the project root
+ANTHROPIC_API_KEY=your-api-key-here
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server
+```bash
+npm run dev
+```
 
-## Learn More
+5. Open [http://localhost:3000](http://localhost:3000)
 
-To learn more about Next.js, take a look at the following resources:
+## How It Works
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Agent uploads a label image (JPG, PNG, or WEBP)
+2. Agent enters the submitted COLA application data into the form
+3. The image is sent to Claude's vision API with a structured extraction prompt
+4. Claude returns a JSON object with all detected TTB label fields
+5. The verification engine compares extracted vs. expected values:
+   - Brand name: case-insensitive, punctuation-normalized comparison
+   - ABV: parsed numerically with 0.1% tolerance
+   - Government warning: exact text match with ALL CAPS enforcement
+   - All other fields: normalized string comparison
+6. Results are displayed field-by-field with pass/fail/review status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Assumptions & Tradeoffs
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **No database or auth** — this is a stateless prototype; production would require agent authentication and audit logging
+- **Batch mode UI** is scaffolded but not fully implemented — the backend supports parallel processing via `Promise.all`, the frontend just needs a CSV parser and multi-file uploader
+- **Government warning** is validated against the standard TTB text; edge cases like bilingual labels are flagged for manual review
+- **ABV tolerance** is set to ±0.1% to account for label rounding per TTB guidelines
+- Images are processed in memory and never stored
